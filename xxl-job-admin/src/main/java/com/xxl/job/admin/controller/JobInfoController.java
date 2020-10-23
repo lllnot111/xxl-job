@@ -18,9 +18,16 @@ import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.util.DateUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +38,7 @@ import java.util.*;
  * index controller
  * @author xuxueli 2015-12-19 16:13:16
  */
-@Controller
+@RestController
 @RequestMapping("/jobinfo")
 public class JobInfoController {
 
@@ -90,49 +97,51 @@ public class JobInfoController {
 		}
 	}
 	
-	@RequestMapping("/pageList")
+	@GetMapping("/pageList")
 	@ResponseBody
 	public Map<String, Object> pageList(@RequestParam(required = false, defaultValue = "0") int start,  
-			@RequestParam(required = false, defaultValue = "10") int length,
-			int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
+										@RequestParam(required = false, defaultValue = "10") int length,
+										@RequestParam(defaultValue = "-1") int jobGroup,
+										@RequestParam(defaultValue = "-1") int triggerStatus,
+										@RequestParam(required = false) String executorHandler) {
 		
-		return xxlJobService.pageList(start, length, jobGroup, triggerStatus, jobDesc, executorHandler, author);
+		return xxlJobService.pageList(start, length, jobGroup, triggerStatus, null, executorHandler, null);
 	}
 	
-	@RequestMapping("/add")
+	@PostMapping("/add")
 	@ResponseBody
-	public ReturnT<String> add(XxlJobInfo jobInfo) {
+	public ReturnT<String> add(@RequestBody XxlJobInfo jobInfo) {
 		return xxlJobService.add(jobInfo);
 	}
 	
-	@RequestMapping("/update")
+	@PutMapping("/update")
 	@ResponseBody
-	public ReturnT<String> update(XxlJobInfo jobInfo) {
+	public ReturnT<String> update(@RequestBody XxlJobInfo jobInfo) {
 		return xxlJobService.update(jobInfo);
 	}
 	
-	@RequestMapping("/remove")
+	@DeleteMapping("/remove/{id}")
 	@ResponseBody
-	public ReturnT<String> remove(int id) {
+	public ReturnT<String> remove( @PathVariable int id) {
 		return xxlJobService.remove(id);
 	}
 	
-	@RequestMapping("/stop")
+	@PutMapping("/stop/{id}")
 	@ResponseBody
-	public ReturnT<String> pause(int id) {
+	public ReturnT<String> pause(@PathVariable int id) {
 		return xxlJobService.stop(id);
 	}
 	
-	@RequestMapping("/start")
+	@PutMapping("/start/{id}")
 	@ResponseBody
-	public ReturnT<String> start(int id) {
+	public ReturnT<String> start(@PathVariable int id) {
 		return xxlJobService.start(id);
 	}
 	
-	@RequestMapping("/trigger")
+	@PutMapping("/trigger/{id}")
 	@ResponseBody
 	//@PermissionLimit(limit = false)
-	public ReturnT<String> triggerJob(int id, String executorParam, String addressList) {
+	public ReturnT<String> triggerJob(@PathVariable int id, String executorParam, String addressList) {
 		// force cover job param
 		if (executorParam == null) {
 			executorParam = "";
@@ -142,25 +151,25 @@ public class JobInfoController {
 		return ReturnT.SUCCESS;
 	}
 
-	@RequestMapping("/nextTriggerTime")
-	@ResponseBody
-	public ReturnT<List<String>> nextTriggerTime(String cron) {
-		List<String> result = new ArrayList<>();
-		try {
-			CronExpression cronExpression = new CronExpression(cron);
-			Date lastTime = new Date();
-			for (int i = 0; i < 5; i++) {
-				lastTime = cronExpression.getNextValidTimeAfter(lastTime);
-				if (lastTime != null) {
-					result.add(DateUtil.formatDateTime(lastTime));
-				} else {
-					break;
-				}
-			}
-		} catch (ParseException e) {
-			return new ReturnT<List<String>>(ReturnT.FAIL_CODE, I18nUtil.getString("jobinfo_field_cron_unvalid"));
-		}
-		return new ReturnT<List<String>>(result);
-	}
+//	@RequestMapping("/nextTriggerTime")
+//	@ResponseBody
+//	public ReturnT<List<String>> nextTriggerTime(String cron) {
+//		List<String> result = new ArrayList<>();
+//		try {
+//			CronExpression cronExpression = new CronExpression(cron);
+//			Date lastTime = new Date();
+//			for (int i = 0; i < 5; i++) {
+//				lastTime = cronExpression.getNextValidTimeAfter(lastTime);
+//				if (lastTime != null) {
+//					result.add(DateUtil.formatDateTime(lastTime));
+//				} else {
+//					break;
+//				}
+//			}
+//		} catch (ParseException e) {
+//			return new ReturnT<List<String>>(ReturnT.FAIL_CODE, I18nUtil.getString("jobinfo_field_cron_unvalid"));
+//		}
+//		return new ReturnT<List<String>>(result);
+//	}
 	
 }
